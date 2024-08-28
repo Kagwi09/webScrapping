@@ -1,0 +1,81 @@
+1. Install scrapy using pip
+2. Create  a scrapy project 'scrapy start project project_name'
+3. cd into project_name
+4. cd into spiders
+
+5. Create a spider using scrapy genspider spider_name domain_name
+     # spider_name - name of spider
+     # domain_name - name of website without https
+
+6. Install ipython to make it easier to view scrapy shell
+7. Use scrapy shell to find CSS selectors from webpage
+8. Use fetch('url') to get data from a website
+
+9. Create a variable that stores the data obtained from fetching
+    # they are stored in a list
+    # books=response.css('article.product_pod')
+    # books - the variable
+    # article - the individual CSS / HTML element like div/ h1,2,3,4 / article   e.t.c
+    # product_pod - the class item of the CSS element
+    # using response argument without an argument returns the url
+    # add  .get() to get the first instance i.e books.get()
+
+ 10. Extract the title of the first instance(title of book) of the variable
+     # Create the first instance of the list.  book = books[0]
+     # Extract the first instant of book.   book.css('h3 a::text').get()
+
+    10.1. Extract the price of the book
+        # e.g. book.css('div.product_price .price_color::text').get()
+        # ensure that there is a space between CSS parent and child element
+        # <div class="product_price">
+                 <span class="price_color">$19.99</span>
+            <div>
+        # In this example, the CSS rule targets any element with the class .price_color that is inside an element with the class .product_price.
+        The space signifies that .price_color is not necessarily a direct child but can be any level of nesting within .product_price.
+
+    10.2. Extract an url with more information
+        # e.g.  book.css('h3 a').attrib['href']
+
+11. Add the extraction text to your spider. Inside the parse function, define the variable (9).
+       # Then use a for loop to extract all the data using a yield function
+       # yield is a keyword in Python that pauses the function and returns a generator object,
+           which allows Scrapy to handle multiple requests asynchronously.
+       # create a variable in '' to store each extraction text
+
+ 12. If you want to view the data extracted, exit from scrapy shell and cd into the bookscraper folder
+        # use scrapy crawl bookspider to extract the data using the parse function
+
+ 13. If there are multiple pages within the url, inspect the page for the CSS selector for the 'next' page
+        # e.g.  response.css('li.next a::attr(href)').get()
+
+14. After the yield statement in the parse function, create a variable storing the 'next page' CSS selector
+        # next_page = response.css('li.next a::attr(href)').get()
+
+15. Use an if statement to check that the last page is reached
+         if next_page is not None:
+          # This line checks if the next_page variable has a value (i.e., it's not None).
+          # If next_page is None, it means there is no "next page" link, and the spider will not proceed to fetch another page.
+
+            next_page_url = 'https://books.toscrape.com/' + next_page
+            # This line constructs the full URL for the next page by concatenating the base URL ('https://books.toscrape.com/')
+                with the value stored in next_page.
+
+            yield response.follow(next_page_url,callback=self.parse)
+            #The response.follow() method is used to generate a new request for the next_page_url
+            # yield is a keyword in Python that pauses the function and returns a generator object,
+                which allows Scrapy to handle multiple requests asynchronously.
+            # The callback=self.parse part tells Scrapy to use the parse() method to process the response from the next_page_url.
+            # The callback=self.parse() should be callback=self.parse without parentheses,
+                otherwise, it calls the parse() method immediately instead of passing the method reference.
+                This would result in an error or unexpected behavior.
+
+16. Ensure that 'item_scrapped_count' is similar to the one in the webpage. If not, check the 'next page' CSS selector on several pages
+      to check for differences and adjust the if statement accordingly
+       if next_page is not None:
+            if 'catalogue/' in next_page:
+                next_page_url = 'https://books.toscrape.com/' + next_page
+            else:
+                next_page_url = 'https://books.toscrape.com/catalogue/' + next_page
+            yield response.follow(next_page_url,callback=self.parse)
+
+
